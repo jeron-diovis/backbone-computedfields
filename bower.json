@@ -1,0 +1,34 @@
+{
+    "name": "ya-backbone-computed-fieldz",
+    "version": "0.0.0",
+    "authors": [
+        "Jeron Diovis <void.jeron.diovis@gmail.com>"
+    ],
+    "description": "Yet another computed fields plugin for Backbone =)",
+    "main": "backbone.computedfields.js",
+    "moduleType": [
+        "amd",
+        "globals"
+    ],
+    "keywords": [
+        "backbone",
+        "computed",
+        "fields",
+        "schema",
+        "depends",
+        "dependencies"
+    ],
+    "license": "MIT",
+    "private": true,
+    "ignore": [
+        "**/.*",
+        "node_modules",
+        "bower_components",
+        "test",
+        "tests"
+    ],
+    "dependencies": {
+        "underscore": ">= 1.4",
+        "backbone": ">= 1.0"
+    }
+}
