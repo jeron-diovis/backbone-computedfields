@@ -17,6 +17,7 @@ module.exports = (config) ->
     files: [
       "../lib/underscore.js", "../lib/backbone.js"
       "../dist/backbone.computedfields.js"
+      "test-config.coffee"
       "spec/**/*.{js,coffee}"
     ]
 

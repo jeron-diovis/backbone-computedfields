@@ -10,6 +10,7 @@ module.exports = (grunt) ->
       dist: "dist"
       src: "src/<%=pkg.name %>.js"
       main: "<%=pkg.dist %>/<%=pkg.name %>.js"
+      tests: ["test/spec/**/*.{js,coffee}", "test/test-config.coffee"]
 
 
     bower:
@@ -45,16 +46,21 @@ module.exports = (grunt) ->
       options:
         configFile: "karma.conf.coffee"
         basePath: "."
+        files: [
+          # do not use {brackets,expansion} as it does not guarantees order
+          "lib/underscore.js"
+          "lib/backbone.js"
+          "<%=pkg.main %>"
+          "<%=pkg.tests %>"
+        ]
 
-      unit:
+      watch:
         options:
           background: yes
-          files: [
-            # do not use {brackets,expansion} as it does not guarantees order
-            "lib/underscore.js", "lib/backbone.js"
-            "<%=pkg.main %>"
-            "test/spec/**/*.{js,coffee}"
-          ]
+
+      CI:
+        options:
+          singleRun: yes
 
 
     watch:
@@ -66,14 +72,15 @@ module.exports = (grunt) ->
 
       karma:
         files: [
-          "<%=karma.unit.options.files.2 %>"
-          "<%=karma.unit.options.files.3 %>"
+          "<%=pkg.main %>"
+          "<%=pkg.tests %>"
         ]
-        tasks: ["karma:unit:run"]
+        tasks: ["karma:watch:run"]
   }
 
   # end of initConfig
 
-  grunt.registerTask "start", ["karma:unit:start", "watch"]
+  grunt.registerTask "start", ["karma:watch:start", "watch"]
+  grunt.registerTask "test", "karma:CI"
   grunt.registerTask "build", ["rig", "uglify"]
   grunt.registerTask "default", ["build"]
