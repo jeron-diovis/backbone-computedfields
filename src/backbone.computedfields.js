@@ -1,5 +1,6 @@
 // TODO: configurable serializeability for computed
 // TODO: built-in computed? (like full name)
+// TODO: allow to manually refresh depsMap, for cases when config was updatedin runtime
 
 
 var ComputedFields = {};
@@ -32,7 +33,7 @@ ComputedFields.mixin = function(model, isInstance) {
         }
     }
 
-    if (isInstance) {
+    if (isInstance && utils.hasComputed(model)) {
         methods.initialize.call(model);
     }
 
