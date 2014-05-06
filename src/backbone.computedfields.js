@@ -45,13 +45,6 @@ ComputedFields.mixin = function(model, isInstance) {
 // wrappers for model's methods with same names. Will replace model's methods
 var wrappers = {
 
-    initialize: function (origin, initialAttrs, options) {
-        if (utils.hasComputed(this) && !utils.isDepsMapInitialized(this)) {
-            methods.initialize.call(this);
-        }
-        return origin.call(this, initialAttrs, options);
-    },
-
     "get": function(origin, attr) {
         if (utils.isComputed(this, attr)) {
             return methods.get.call(this, attr);
