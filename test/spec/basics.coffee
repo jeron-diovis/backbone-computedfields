@@ -1,13 +1,10 @@
 Model = null
 
-# Backbone.Model.extend() and Backbone.ComputedFields.mixin are used only in these tests, to show what exactly we do.
-# In other tests 'clazz()' shortcut will be used to create new class with already attached mixin
-
 describe "mixing", ->
 
   methods = ["get", "set"]
 
-  beforeEach -> Model = Backbone.Model.extend()
+  beforeEach -> Model = clazz()
 
   it "should override methods in prototype", ->
     mixin Model::
@@ -29,7 +26,7 @@ describe "initializing", ->
 
   describe "when initializing with non-empty computed config", ->
     beforeEach ->
-      Model = Backbone.Model.extend
+      Model = clazz
         computed:
           answer:
             get: -> 42
@@ -71,7 +68,7 @@ describe "initializing", ->
 
   describe "when initializing with empty computed config", ->
 
-    beforeEach -> Model = Backbone.Model.extend()
+    beforeEach -> Model = clazz()
 
     it "should NOT create dependencies config in prototype", ->
       mixin Model::, yes
