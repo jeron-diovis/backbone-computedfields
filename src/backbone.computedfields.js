@@ -121,6 +121,10 @@ var methods = {
         for (var attr in config) {
             var field = config[attr];
 
+            if (!(_.has(field, 'get') || _.has(field, 'set'))) {
+                throw new Error('Computed fields: field "' + attr + '" is useless - no getter and no setter defined');
+            }
+
             // TODO: short syntax for dependencies ("attr < dep1 dep2")
             // TODO: short syntax for getter (when getter only)
 
