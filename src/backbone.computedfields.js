@@ -298,6 +298,8 @@ var methods = {
         deps = field.depends;
         if (typeof deps === 'string') {
             deps = deps.split(stringDepsSplitter);
+        } else if (typeof deps === 'function') {
+            deps = [deps];
         }
 
         for (i = 0; i < deps.length; i++) {
