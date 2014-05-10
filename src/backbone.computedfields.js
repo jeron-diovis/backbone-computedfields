@@ -18,7 +18,8 @@ ComputedFields.config = {
 
 // shortcut
 var cfg = function(opt) { return ComputedFields.config[opt]; };
-var sandboxContext = { hint: 'it is sandbox, so you cannot use model methods inside computed fields accessors' };
+
+var sandboxContext = { isSandboxContext: true };
 var depsMapPropName = '_computedFieldsDependenciesMap';
 var endlessLoopMaxIterations = 50;
 
