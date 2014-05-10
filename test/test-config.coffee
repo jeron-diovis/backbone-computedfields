@@ -1,4 +1,6 @@
-{mixin} = Backbone.ComputedFields
+Plugin = Backbone.ComputedFields
+
+{mixin} = Plugin
 
 {clazz, clazzMix, clazzMixInit} = do ->
   clazz = -> Backbone.Model.extend arguments...

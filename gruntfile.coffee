@@ -10,7 +10,14 @@ module.exports = (grunt) ->
       dist: "dist"
       src: "src/<%=pkg.name %>.js"
       main: "<%=pkg.dist %>/<%=pkg.name %>.js"
-      tests: ["test/spec/**/*.{js,coffee}", "test/test-config.coffee"]
+      tests: [
+        "test/test-config.coffee"
+        "test/spec/**/*.{js,coffee}"
+      ]
+      allTested: [
+        "<%=pkg.main %>"
+        "<%=pkg.tests %>"
+      ]
 
 
     bower:
@@ -50,8 +57,7 @@ module.exports = (grunt) ->
           # do not use {brackets,expansion} as it does not guarantees order
           "lib/underscore.js"
           "lib/backbone.js"
-          "<%=pkg.main %>"
-          "<%=pkg.tests %>"
+          "<%=pkg.allTested %>"
         ]
 
       watch:
@@ -71,10 +77,7 @@ module.exports = (grunt) ->
         tasks: ["rig"]
 
       karma:
-        files: [
-          "<%=pkg.main %>"
-          "<%=pkg.tests %>"
-        ]
+        files: "<%=pkg.allTested %>"
         tasks: ["karma:watch:run"]
   }
 

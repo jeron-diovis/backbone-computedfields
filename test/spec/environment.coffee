@@ -5,7 +5,7 @@ describe "environment", ->
   it "should load all scripts", ->
     expect(_).is.a "function", "Underscore"
     expect(Backbone).is.an "object", "Backbone"
-    expect(Backbone.ComputedFields).is.an "object", "Computed fields plugin"
+    expect(Plugin).is.an "object", Backbone.ComputedFields, "Computed fields plugin"
     expect(mixin).is.a "function", "Helper 'mixin' function"
     for name, func of {clazz, clazzMix, clazzMixInit}
       expect(func).is.a "function", "Helper '#{name}' function"

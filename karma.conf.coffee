@@ -10,12 +10,13 @@ module.exports = (config) ->
 
     # frameworks to use
     # available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ["mocha", "chai"]
+    frameworks: ["mocha", "chai", "sinon"]
 
     # list of files / patterns to load in the browser
     # File paths are duplicated in Gruntfile. Here they are to allow to run tests configuration with external tools
     files: [
-      "../lib/underscore.js", "../lib/backbone.js"
+      "../lib/underscore.js"
+      "../lib/backbone.js"
       "../dist/backbone.computedfields.js"
       "test-config.coffee"
       "spec/**/*.{js,coffee}"
