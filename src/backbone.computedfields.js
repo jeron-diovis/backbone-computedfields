@@ -207,7 +207,7 @@ var methods = {
             virtualAttrs = [],
             preparedAttrs = {},
             validationMap = {},
-            cascadeAttrs, preparedInIteration,
+            cascadeAttrs,
             attr, value, attrResult,
             setter, setterResult,
             field, deps,
@@ -219,7 +219,6 @@ var methods = {
             if (++iteration > endlessLoopMaxIterations) throw new Error("INFINITY");
 
             cascadeAttrs = {};
-            preparedInIteration = {};
             for (attr in attrs) {
                 value = attrs[attr];
 
@@ -238,7 +237,11 @@ var methods = {
                     if (setter === false) {
                         continue;
                     } else {
-                        setterResult = (setter == null || setter === true) ? value : setter.call(sandboxContext, value, options);
+                        var setterIsFunction = !(setter == null || setter === true),
+                            hasCascade = setterIsFunction && utils.hasAttrDeps(field),
+                            isVirtual = !isProxy && !(setter || hasCascade);
+
+                        setterResult = !setterIsFunction ? value : setter.call(sandboxContext, value, options);
 
                         // 'proxy' field means that is is modified on setting - so save setterResult in this case, and it's value will appear in 'change' event
                         // in any other case new attribute value will be same as passed to 'set'
@@ -246,12 +249,12 @@ var methods = {
 
                         // unless field is proxy, it is 'virtual' - it can't be saved in 'attributes' hash (unless setter explicitly allows it)
                         // it still will be passed to origin 'set' - to be validated and to trigger 'change' event - but after that it will be removed from 'attributes'
-                        if (!(isProxy || setter === true)) {
+                        if (isVirtual) {
                             virtualAttrs.push(attr);
                         }
 
                         // virtual attributes can only update it's dependencies:
-                        if (!isProxy && typeof setter === 'function' && utils.hasAttrDeps(field)) {
+                        if (!isProxy && hasCascade) {
 
                             // note, that values for dependencies will NOT yet be added to 'prepared' list - as they now must also me checked recursively:
 
@@ -275,8 +278,7 @@ var methods = {
                 }
 
                 // save processed attr to be passed to origin 'set'
-                _.extend(preparedInIteration, attrResult);
-                _.extend(preparedAttrs, preparedInIteration);
+                _.extend(preparedAttrs, attrResult);
 
                 // and save additional validation info
                 utils.extendValidationMap(validationMap, attr, attrResult);
@@ -291,7 +293,8 @@ var methods = {
             } else {
                 // when all directly set attributes resolved, check whether there are some cascadely dependent attributes
                 // resolve them recursively until cascade is exhausted
-                var cascade = utils.buildDepsCascade(_.keys(preparedInIteration), config, depsMap);
+                //var cascade = utils.buildDepsCascade(_.keys(preparedInIteration), config, depsMap);
+                var cascade = utils.buildDepsCascade(_.keys(preparedAttrs), config, depsMap);
                 if (cascade.length > 0) {
                     cascadeAttrs = utils.resolveDepsCascade(cascade, preparedAttrs, model, config);
                     attrs = cascadeAttrs;
