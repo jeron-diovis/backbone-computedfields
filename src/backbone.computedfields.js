@@ -94,10 +94,22 @@ var wrappers = {
             }
         }
 
+        // prepare computed attributes to be set
         attrs = methods.set.call(this, attrs, options);
+
+        // prepare previous attributes by our own,
+        // so 'previous' method will return really same value as would be returned by 'get' before setting
+        var prev = _.clone(this.attributes);
+        for (var attr in prev) {
+            if (utils.isComputed(this, attr)) {
+                prev[attr] = this.get(attr);
+            }
+        }
 
         // actually set attributes:
         var result = origin.call(this, attrs.direct, options);
+
+        this._previousAttributes = prev;
 
         // now need to remove virtuals from 'attributes' hash:
 
@@ -223,7 +235,7 @@ var methods = {
                     isProxy = utils.isProxyField(field);
 
                     // if setter is explicitly disabled, this attribute cannot be set at all
-                    if (setter === false || (setter == null && !isProxy)) {
+                    if (setter === false) {
                         continue;
                     } else {
                         setterResult = (setter == null || setter === true) ? value : setter.call(sandboxContext, value, options);
