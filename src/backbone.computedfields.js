@@ -176,7 +176,7 @@ var methods = {
             virtualAttrs = [],
             preparedAttrs = {},
             validationMap = {},
-            cascadeAttrs,
+            cascadeAttrs, preparedInIteration,
             attr, value, attrResult,
             setter, setterResult,
             field, deps,
@@ -188,6 +188,7 @@ var methods = {
             if (++iteration > endlessLoopMaxIterations) throw new Error("INFINITY");
 
             cascadeAttrs = {};
+            preparedInIteration = {};
             for (attr in attrs) {
                 value = attrs[attr];
 
@@ -203,7 +204,7 @@ var methods = {
                     isProxy = utils.isProxyField(field);
 
                     // if setter is explicitly disabled, this attribute cannot be set at all
-                    if (setter === false) {
+                    if (setter === false || (setter == null && !isProxy)) {
                         continue;
                     } else {
                         setterResult = (setter == null || setter === true) ? value : setter.call(sandboxContext, value, options);
@@ -243,7 +244,8 @@ var methods = {
                 }
 
                 // save processed attr to be passed to origin 'set'
-                _.extend(preparedAttrs, attrResult);
+                _.extend(preparedInIteration, attrResult);
+                _.extend(preparedAttrs, preparedInIteration);
 
                 // and save additional validation info
                 utils.extendValidationMap(validationMap, attr, attrResult);
@@ -258,7 +260,7 @@ var methods = {
             } else {
                 // when all directly set attributes resolved, check whether there are some cascadely dependent attributes
                 // resolve them recursively until cascade is exhausted
-                var cascade = utils.buildDepsCascade(_.keys(preparedAttrs), config, depsMap);
+                var cascade = utils.buildDepsCascade(_.keys(preparedInIteration), config, depsMap);
                 if (cascade.length > 0) {
                     cascadeAttrs = utils.resolveDepsCascade(cascade, preparedAttrs, model, config);
                     attrs = cascadeAttrs;
