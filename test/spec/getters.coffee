@@ -2,6 +2,8 @@ Model = null
 
 describe "getters", ->
 
+  after -> Model = null
+
   describe "context", ->
 
     it "should call getters in sandbox context", ->
@@ -109,7 +111,7 @@ describe "getters", ->
           get: (real) -> "--#{real}--"
 
     model = new Model
-    expect(model.get "answer").is.a("string").and.equal("42")
+    expect(model.get "answer").is.a("string").that.is.equal("42").and.is.not.equal(model.attributes.answer)
     expect(model.get "unexisting").is.equal "--undefined--"
 
   describe "functional dependencies", ->

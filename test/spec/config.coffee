@@ -2,6 +2,8 @@ Model = null
 
 describe "computed config", ->
 
+  after -> Model = null
+
   it "for each field should require at least getter or setter", ->
     init = -> clazzMixInit computed: useless: {}
     expect(init).to.throw /useless/
@@ -136,7 +138,7 @@ describe "computed config", ->
         expect(field.depends.proxyIndex).is.equal 0, "Proxy field is not parsed properly"
 
 
-    describe "advanced", ->
+    describe "advanced syntax", ->
 
       deps = null
 

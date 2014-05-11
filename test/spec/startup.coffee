@@ -2,9 +2,11 @@ Model = null
 
 describe "startup", ->
 
+  after -> Model = null
+
   describe "mixin", ->
 
-    methods = ["get", "set"]
+    methods = ["get", "set", "initialize"]
 
     beforeEach -> Model = clazz()
 
