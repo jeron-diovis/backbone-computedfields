@@ -7,6 +7,7 @@ var ComputedFields = {};
 
 ComputedFields.config = {
     configPropName: 'computed',
+    preventDefaults: false,
     funcDepsPrefix: '=',
     shortDepsNameSeparator: /\s+<\s+/,
     shortDepsSplitter: /\s+/,
@@ -46,6 +47,13 @@ ComputedFields.mixin = function(model, isInstance) {
 // wrappers for model's methods with same names. Will replace model's methods
 var wrappers = {
 
+    initialize: function (origin, attrs, options) {
+        if (utils.hasComputed(this)) {
+            methods.initialize.call(this);
+        }
+        return origin.call(this, attrs, options);
+    },
+
     "get": function(origin, attr) {
         if (utils.isComputed(this, attr)) {
             return methods.get.call(this, attr);
@@ -69,15 +77,21 @@ var wrappers = {
         //
 
         // unsetting is not our job
-        if (options.unset) { return origin.call(this, attrs, options); }
-
-        if (!utils.hasComputed(this)) {
-            return origin.call(this, key, val, options);
+        if (options.unset) {
+            return origin.call(this, attrs, options);
         }
 
-        // check for initialization here to handle very first 'set' call from model's constructor
-        if (!utils.isDepsMapInitialized(this)) {
-            methods.initialize.call(this);
+        if (!utils.hasComputed(this)) {
+            return origin.call(this, attrs, options);
+        }
+
+        // check whether it is a very first 'set' call from constructor, which sets default attrs
+        if (this.changed === null) {
+            if (!cfg('preventDefaults')) {
+                return origin.call(this, attrs, options);
+            } else {
+                methods.initialize.call(this);
+            }
         }
 
         attrs = methods.set.call(this, attrs, options);
@@ -113,8 +127,13 @@ var wrappers = {
 var methods = {
 
     initialize: function () {
-        var model = this,
-            config = utils.getComputedConfig(model),
+        var model = this;
+
+        if (utils.isDepsMapInitialized(model)) {
+            return model;
+        }
+
+        var config = utils.getComputedConfig(model),
             storage = utils.getDepsMapStorage(model);
 
         var dependenciesMap = {};
@@ -144,7 +163,7 @@ var methods = {
         storage[cfg('configPropName')] = config;
         storage[depsMapPropName] = dependenciesMap;
 
-        return this;
+        return model;
     },
 
     "get": function (attr) {
