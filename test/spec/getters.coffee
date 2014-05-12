@@ -114,6 +114,17 @@ describe "getters", ->
     expect(model.get "answer").is.a("string").that.is.equal("42").and.is.not.equal(model.attributes.answer)
     expect(model.get "unexisting").is.equal "--undefined--"
 
+  it "should get attribute as-is when there is no getter", ->
+    Model = clazzMix
+      defaults: ->
+        answer: 42
+      computed:
+        answer:
+          set: ->
+
+    model = new Model
+    expect(model.get "answer").is.equal 42
+
   describe "functional dependencies", ->
     prevConfig = null
 
