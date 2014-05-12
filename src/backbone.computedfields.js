@@ -7,7 +7,7 @@ var ComputedFields = {};
 
 ComputedFields.config = {
     configPropName: 'computed',
-    preventDefaults: false,
+    initInConstructor: false,
     funcDepsPrefix: '=',
     shortDepsNameSeparator: /\s+<\s+/,
     shortDepsSplitter: /\s+/,
@@ -87,7 +87,7 @@ var wrappers = {
 
         // check whether it is a very first 'set' call from constructor, which sets default attrs
         if (this.changed === null) {
-            if (!cfg('preventDefaults')) {
+            if (!cfg('initInConstructor')) {
                 return origin.call(this, attrs, options);
             } else {
                 methods.initialize.call(this);
