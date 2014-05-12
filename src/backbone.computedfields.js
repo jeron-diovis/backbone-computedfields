@@ -571,7 +571,7 @@ var utils = {
             sources = preparedAttrs[attr];
             isShouldBeChecked = _.size(sources) > 1;
             if (isShouldBeChecked) {
-                isValid = _.chain(sources).values().flatten(true).map(utils.serialize).uniq().value().length === 1;
+                isValid = _.chain(sources).values().map(utils.serialize).uniq().value().length === 1;
                 if (!isValid) {
                     msg = "Computed fields: can't set attribute '" + attr + "' as it is inconsistent - several setters returns different values: \n" +
                         _.map(sources, function (value, srcAttr) {
