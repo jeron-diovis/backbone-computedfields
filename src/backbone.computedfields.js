@@ -267,7 +267,12 @@ var methods = {
                                 if (_.isArray(setterResult)) {
                                     setterResult = _.object(deps, setterResult);
                                 } else if (_.isObject(setterResult)) {
+                                    // omit properties which are not match dependencies
                                     setterResult = _.pick(setterResult, deps);
+                                    // but missed dependencies should become undefined
+                                    if (_.size(setterResult) < deps.length) {
+                                        _.defaults(setterResult, _.object(deps, []));
+                                    }
                                 } else {
                                     throw new Error('Computed fields: field "' + attr + "' depends from following attrs: " + deps.join(",") + ", so it's setter must return array, or object with corresponding keys.");
                                 }
