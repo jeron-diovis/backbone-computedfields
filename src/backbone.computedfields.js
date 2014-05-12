@@ -239,7 +239,7 @@ var methods = {
                     } else {
                         var setterIsFunction = !(setter == null || setter === true),
                             hasCascade = setterIsFunction && utils.hasAttrDeps(field),
-                            isVirtual = !isProxy && !(setter || hasCascade);
+                            isVirtual = !isProxy && (!setter || hasCascade);
 
                         setterResult = !setterIsFunction ? value : setter.call(sandboxContext, value, options);
 
