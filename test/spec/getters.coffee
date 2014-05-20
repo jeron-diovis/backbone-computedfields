@@ -2,61 +2,6 @@ Model = null
 
 describe "getters", ->
 
-  after -> Model = null
-
-  describe "context", ->
-
-    it "should call getters in sandbox context", ->
-      getter = sinon.spy()
-
-      Model = clazzMix
-        computed:
-          field:
-            get: getter
-
-      model = new Model
-      model.get "field"
-
-      context = getter.thisValues[0]
-      expect(getter.calledOn model).is.false
-      expect(context).has.property "isSandboxContext", true
-
-    if Object.freeze?
-      it "should deny to modify getters context", ->
-        getter = sinon.spy ->
-          @newProperty = "modified!"
-          @isSandboxContext = false
-
-        Model = clazzMix
-          computed:
-            field:
-              get: getter
-
-        model = new Model
-        model.get "field"
-
-        expect(getter.called).is.true
-        context = getter.thisValues[0]
-        expect(context).not.has.property "newProperty"
-        expect(context).has.property "isSandboxContext", true
-
-    it "should call functional dependencies in context of model", ->
-      callback = sinon.spy()
-
-      Model = clazzMix
-        method: callback
-        computed:
-          field:
-            depends: ["=method", callback]
-            get: ->
-
-      model = new Model
-      model.get "field"
-
-      expect(callback.calledTwice).is.true
-      expect(callback.alwaysCalledOn model).is.true
-
-
   beforeEach -> Model = null
 
   it "should get simplest virtual attribute", ->
@@ -125,15 +70,9 @@ describe "getters", ->
     model = new Model
     expect(model.get "answer").is.equal 42
 
-  describe "functional dependencies", ->
-    prevConfig = null
+  describe "with functional dependencies", configurable ->
 
-    before ->
-      {config} = Plugin
-      prevConfig = _.clone config
-      config.funcDepsPrefix = "="
-
-    after -> Plugin.config = prevConfig
+    beforeEach -> config.funcDepsPrefix = "="
 
     it "should allow model's methods in dependencies", ->
       Model = clazzMix
@@ -156,7 +95,7 @@ describe "getters", ->
       model = new Model
       expect(model.get "field").is.equal "Field returns value from callback"
 
-    it "should call functional dependencies with field name as single argument", ->
+    it "should call functional dependencies in model context with field name as single argument", ->
       callback = sinon.spy()
 
       Model = clazzMix
@@ -170,4 +109,5 @@ describe "getters", ->
       model.get "field"
 
       expect(callback.calledTwice).is.true
+      expect(callback.alwaysCalledOn model).is.true
       expect(callback.alwaysCalledWithExactly "field").is.true

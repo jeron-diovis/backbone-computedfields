@@ -2,8 +2,6 @@ Model = null
 
 describe "startup", ->
 
-  after -> Model = null
-
   describe "mixin", ->
 
     methods = ["get", "set", "initialize"]
@@ -45,7 +43,7 @@ describe "startup", ->
         expect(Model::).has.ownProperty propName
         expect(model).not.has.ownProperty propName
 
-      it "should create dependencies config in instance when instance have own computed config", ->
+      it "should create dependencies config in instance when instance has own computed config", ->
         model = new Model
         model.computed =
           question:
@@ -74,17 +72,17 @@ describe "startup", ->
 
       beforeEach -> Model = clazz()
 
-      it "should NOT create dependencies config in prototype", ->
+      it "should not create dependencies config when attached to prototype", ->
         mixin Model::, yes
         expect(Model::).not.has.ownProperty propName
 
-      it "should NOT create dependencies config nowhere", ->
+      it "should not create dependencies config nowhere when attached to instance", ->
         model = new Model
         mixin model, yes
         expect(model).not.has.ownProperty propName
         expect(Model::).not.has.ownProperty propName
 
-      it "should NOT lazy create dependencies config nowhere", ->
+      it "should not lazy create dependencies config nowhere", ->
         mixin Model::
         model = new Model
         expect(Model::).not.has.ownProperty propName

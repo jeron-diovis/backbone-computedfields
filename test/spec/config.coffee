@@ -26,7 +26,7 @@ describe "computed config", ->
       expect(Model::computed).is.an "object", "Computed config function was not overridden with parsed config"
 
 
-  describe "should statically detect circular dependencies", ->
+  describe "should statically detect circular dependencies", configurable ->
 
     initializer = -> mixin Model::, yes
 
@@ -66,37 +66,24 @@ describe "computed config", ->
 
       expect(initializer).to.not.throw Error, "Proxy field self-reference is not recognized"
 
-    describe "recognizing method-dependencies", ->
+    it "should distinguish method-dependencies from attributes, and do not recognize them as circular dependencies", ->
+      config.funcDepsPrefix = "="
 
-      prevConfig = null
+      Model = clazz
+        theMethod: -> "some value"
+        computed:
+          "=theMethod":
+            get: -> 42
+            depends: "=theMethod"
 
-      before ->
-        {config} = Plugin
-        prevConfig = _.clone config
-        config.funcDepsPrefix = "="
-
-      after -> Plugin.config = prevConfig
-
-      it "should distinguish method-dependencies and attributes, and do not recognize them as circular dependencies", ->
-        Model = clazz
-          theMethod: -> "some value"
-          computed:
-            "=theMethod":
-              get: -> 42
-              depends: "=theMethod"
-
-        expect(initializer).to.not.throw Error, "Method-dependency is not distinguished from attribute"
-        expect(Model::computed["=theMethod"].depends).to.not.have.ownProperty "proxyIndex", "Method-dependency is recognized as proxy field"
+      expect(initializer).to.not.throw Error, "Method-dependency is not distinguished from attribute"
+      expect(Model::computed["=theMethod"].depends).to.not.have.ownProperty "proxyIndex", "Method-dependency is recognized as proxy field"
 
 
-  describe "parsing", ->
+  describe "parsing", configurable ->
 
-    prevConfig = null
-
-    before ->
-      {config} = Plugin
-      prevConfig = _.clone config
-      # set config locally to do not depend from plugin defaults in test
+    beforeEach ->
+      # set entire config locally to do not depend from plugin defaults in test
       _.extend config,
         funcDepsPrefix: "="
         stringDepsSplitter: /\s+/,
@@ -104,17 +91,14 @@ describe "computed config", ->
         shortDepsNameSeparator: /\s+<\s+/,
         shortDepsSplitter: /\s+/,
 
-    after -> Plugin.config = prevConfig
-
-
     describe "basics", ->
 
       field = null
-      externalFunc = -> "some external value"
+      externalFunc = ->
 
       before ->
         Model = clazzMixInit
-          theMethod: -> "some value"
+          theMethod: ->
           computed:
             answer:
               get: -> 42
@@ -123,7 +107,7 @@ describe "computed config", ->
         field = Model::computed.answer
 
       it "should modify computed config with parsed data", ->
-        expect(field).has.property "name", "answer"
+        expect(field).has.property "name", "answer", "Field name is not parsed"
         expect(field.depends).is.an "object", "Dependencies are not parsed"
 
       it "should properly parse different types of dependencies", ->
@@ -142,6 +126,8 @@ describe "computed config", ->
 
       deps = null
 
+      beforeEach -> Model = null; deps = null
+
       # shortcut, to quickly redefine just desired field params
       defField = (name, config) ->
         field = {}
@@ -151,7 +137,6 @@ describe "computed config", ->
 
         deps = -> Model::computed[name].depends
 
-      beforeEach -> Model = null; deps = null
 
       it "should allow to define dependencies as a string", ->
         defField "answer", depends: "someAttr someAnotherAttr"
