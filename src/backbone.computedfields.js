@@ -111,17 +111,10 @@ var wrappers = {
 
         this._previousAttributes = prev;
 
-        // now need to remove virtuals from 'attributes' hash:
-
-        // little trick to prevent '_previousAttributes' from being updated
-        var changing = this._changing;
-        this._changing = true;
-
+        // now need to remove virtuals from 'attributes' hash. Do not use 'this.unset' for perfomance
         for (var i = 0; i < attrs.virtual.length; i++) {
-            this.unset(attrs.virtual[i], { silent: true, validate: false });
+            delete this.attributes[attrs.virtual[i]];
         }
-        // restore prev 'changing' state
-        this._changing = changing;
 
         return result;
     }
