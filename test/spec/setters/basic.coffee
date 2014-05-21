@@ -138,6 +138,8 @@ describe "setters", ->
             formatted:
               depends: "report"
               get: (report) -> "Formatted: #{report}"
+            independent:
+              get: -> "independent field"
 
           for name, field of config when setters[name]?
             field.set = setters[name]
@@ -208,6 +210,7 @@ describe "setters", ->
           "answer"   : "yes"
 
         expect(callback.callCount).is.equal 5, "Callback was called wrong number of times" # +1 for common 'change' event
+        expect(callback.calledWith "change:independent").is.equal false, "Independent field was updated"
 
         i = -1
         for name, value of expectedChanges
@@ -220,3 +223,16 @@ describe "setters", ->
         for name in ["formatted", "report"]
           expect(setters[name].calledOnce).is.equal true, "'#{name}' setter was called several times"
           expect(setters[name].calledWith expectedChanges[name]).is.equal true, "'#{name}' setter was called with wrong value"
+
+      it "should check consistency of values to be set", ->
+        defSetters report: (str) -> str.split "-"
+
+        model = new Model
+
+        setter = ->
+          model.set
+            report: "question-answer"
+            question: "inconsistent question value"
+            answer: "inconsistent answer value"
+
+        expect(setter).to.throw /can't set attribute 'question'/

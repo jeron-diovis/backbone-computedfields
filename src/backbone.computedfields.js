@@ -201,6 +201,7 @@ var methods = {
             preparedAttrs = {},
             validationMap = {},
             cascadeAttrs,
+            attrCascade,
             attr, value, attrResult,
             setter, setterResult,
             field, deps,
@@ -216,6 +217,7 @@ var methods = {
                 value = attrs[attr];
 
                 attrResult = {};
+                attrCascade = {};
 
                 // simple attrs are processed as usual
                 if (!utils.isComputed(model, attr, config)) {
@@ -254,7 +256,7 @@ var methods = {
                             deps = utils.getAttrDeps(field);
                             // for fields with single dependency any returned value is considered that dependency value
                             if (deps.length === 1) {
-                                cascadeAttrs[deps[0]] = setterResult;
+                                attrCascade[deps[0]] = setterResult;
                             } else {
                                 // otherwise value must be array or an object, which will be mapped to dependencies list
                                 if (_.isArray(setterResult)) {
@@ -269,7 +271,7 @@ var methods = {
                                 } else {
                                     throw new Error('Computed fields: field "' + attr + "' depends from following attrs: " + deps.join(",") + ", so it's setter must return array, or object with corresponding keys.");
                                 }
-                                _.extend(cascadeAttrs, setterResult);
+                                _.extend(attrCascade, setterResult);
                             }
                         }
                     }
@@ -277,10 +279,11 @@ var methods = {
 
                 // save processed attr to be passed to origin 'set'
                 _.extend(preparedAttrs, attrResult);
+                _.extend(cascadeAttrs, attrCascade);
 
                 // and save additional validation info
                 utils.extendValidationMap(validationMap, attr, attrResult);
-                utils.extendValidationMap(validationMap, attr, cascadeAttrs);
+                utils.extendValidationMap(validationMap, attr, attrCascade);
             }
 
             utils.ensureSetterConsistency(validationMap);
