@@ -7,6 +7,28 @@ describe "when setter is a function", ->
 
   describe "should update attr deps instead of storing itself, and trigger 'change' for both", ->
 
+    it "should not care about consistency when pure virtual fields depends from one another", ->
+      Model = clazzMix
+        computed:
+          firstName:
+            get: -> "John"
+          lastName:
+            get: -> "Smith"
+          fullName:
+            depends: "firstName lastName"
+            set: (str) -> str.split " "
+
+      model = new Model
+      callback = sinon.spy()
+
+      model.on "all", callback
+
+      model.set "fullName", "Unknown Anonymous"
+
+      for name in ["firstName", "lastName"]
+        triggered = callback.withArgs("change:#{name}").args[1]
+        expect(model.get name).is.not.equal triggered, "Wow, pure virtual field '#{name}' has been affected by setting dependent field"
+
     describe "when there is single dependency", ->
 
       it "should directly map setter's returned value to dependency value, no matter what that value is", ->
