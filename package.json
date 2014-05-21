@@ -1,6 +1,6 @@
 {
   "name": "ya-backbone-computed-fieldz",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Yet another computed fields plugin for Backbone",
   "main": "./dist/backbone.computedfields-amd.js",
   "keywords": [

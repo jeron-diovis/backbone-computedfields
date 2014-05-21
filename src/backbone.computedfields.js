@@ -414,7 +414,7 @@ var utils = {
 
 
     isProxyField: function (field) {
-        return field.depends.proxyIndex != null || field.get == null;
+        return field.depends.proxyIndex != null;
     },
 
     buildDepsCascade: function (attrs, config, depsMap) {
