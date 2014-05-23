@@ -3,6 +3,9 @@
   "version": "0.1.8",
   "description": "Yet another computed fields plugin for Backbone",
   "main": "./dist/backbone.computedfields-amd.js",
+  "scripts": {
+    "test": "grunt rig test"
+  },
   "keywords": [
     "backbone",
     "computed",
