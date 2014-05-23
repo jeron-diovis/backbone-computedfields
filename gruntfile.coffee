@@ -85,5 +85,6 @@ module.exports = (grunt) ->
 
   grunt.registerTask "start", ["karma:watch:start", "watch"]
   grunt.registerTask "test", "karma:CI"
+  grunt.registerTask "setup", ["bower"]
   grunt.registerTask "build", ["rig", "uglify"]
   grunt.registerTask "default", ["build"]

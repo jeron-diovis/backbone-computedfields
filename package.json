@@ -4,7 +4,7 @@
   "description": "Yet another computed fields plugin for Backbone",
   "main": "./dist/backbone.computedfields-amd.js",
   "scripts": {
-    "test": "grunt rig test"
+    "test": "grunt setup rig test"
   },
   "keywords": [
     "backbone",
