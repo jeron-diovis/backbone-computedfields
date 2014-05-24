@@ -67,6 +67,7 @@ module.exports = (grunt) ->
       CI:
         options:
           singleRun: yes
+          browsers: ["PhantomJS"]
 
 
     watch:
