@@ -9,6 +9,7 @@ ComputedFields.config = {
     configPropName: 'computed',
     initInConstructor: false,
     funcDepsPrefix: '=',
+    propDepsPrefix: '.',
     shortDepsNameSeparator: /\s+<\s+/,
     shortDepsSplitter: /\s+/,
     stringDepsSplitter: /\s+/,
@@ -319,43 +320,56 @@ var methods = {
     },
 
     parseDeps: function (field) {
-        var model = this;
-
         var parsed = {
             attrs: [],
-            common: []
+            common: [],
+            props: {},
+            funcs: {}
         };
 
         if (!field.depends) {
             return parsed;
         }
 
-        var i, deps, dependency,
-            funcPrefix = cfg('funcDepsPrefix'),
-            proxyFieldPattern = cfg('proxyFieldPattern'),
-            stringDepsSplitter = cfg('stringDepsSplitter');
+        var i, deps, dependency, isSpecial,
+            proxyFieldPattern = cfg('proxyFieldPattern');
 
         deps = field.depends;
         if (typeof deps === 'string') {
-            deps = deps.split(stringDepsSplitter);
+            deps = deps.split(cfg('stringDepsSplitter'));
         } else if (typeof deps === 'function') {
             deps = [deps];
         }
 
+        var specialDeps = {
+            props: cfg('propDepsPrefix'),
+            funcs: cfg('funcDepsPrefix')
+        };
+
         for (i = 0; i < deps.length; i++) {
             dependency = deps[i];
+            isSpecial = false;
             if (typeof dependency === 'string') {
-                if (dependency.indexOf(funcPrefix) === 0) {
-                    dependency = model[dependency.slice(funcPrefix.length)];
-                    parsed.common.push(dependency);
-                } else {
-                    // allow self-ref both by shortcut and by name (to prevent circular dependencies)
-                    if (proxyFieldPattern.test(dependency) || dependency === field.name) {
-                        parsed.proxyIndex = i;
-                    } else {
-                        parsed.attrs.push(dependency);
+                for (var type in specialDeps) {
+                    var prefix = specialDeps[type];
+                    if (dependency.indexOf(prefix) === 0) {
+                        parsed[type][dependency] = dependency.slice(prefix.length);
                         parsed.common.push(dependency);
+                        isSpecial = true;
+                        break;
                     }
+                }
+
+                if (isSpecial) {
+                    continue;
+                }
+
+                // allow self-ref both by shortcut and by name (to prevent circular dependencies)
+                if (proxyFieldPattern.test(dependency) || dependency === field.name) {
+                    parsed.proxyIndex = i;
+                } else {
+                    parsed.attrs.push(dependency);
+                    parsed.common.push(dependency);
                 }
             } else if (typeof dependency === 'function') {
                 parsed.common.push(dependency);
@@ -508,6 +522,7 @@ var utils = {
     resolveGetterDeps: function (model, field, subst) {
         var i, deps, dependency,
             isProxy = utils.isProxyField(field),
+            specialDeps = _.pick(field.depends, 'props', 'funcs'),
             resolvedDeps = [];
 
         subst || (subst = {});
@@ -516,7 +531,11 @@ var utils = {
         for (i = 0; i < deps.length; i++) {
             dependency = deps[i];
             if (typeof dependency === 'string') {
-                if (dependency in subst) {
+                if (dependency in specialDeps.props) {
+                    dependency = model[specialDeps.props[dependency]];
+                } else if (dependency in specialDeps.funcs) {
+                    dependency = model[specialDeps.funcs[dependency]].call(model, field.name);
+                } else if (dependency in subst) {
                     dependency = subst[dependency];
                 } else {
                     dependency = model.get(dependency);

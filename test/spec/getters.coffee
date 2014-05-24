@@ -70,9 +70,11 @@ describe "getters", ->
     model = new Model
     expect(model.get "answer").is.equal 42
 
-  describe "with functional dependencies", configurable ->
+  describe "special dependencies", configurable ->
 
-    beforeEach -> config.funcDepsPrefix = "="
+    beforeEach ->
+      config.funcDepsPrefix = "="
+      config.propDepsPrefix = "."
 
     it "should allow model's methods in dependencies", ->
       Model = clazzMix
@@ -111,3 +113,19 @@ describe "getters", ->
       expect(callback.calledTwice).is.true
       expect(callback.alwaysCalledOn model).is.true
       expect(callback.alwaysCalledWithExactly "field").is.true
+
+    it "should allow model's properties in dependencies", ->
+      Model = clazzMix
+        property: "prop"
+        method: -> "func"
+        computed:
+          prop:
+            depends: ".property"
+            get: _.identity
+          func:
+            depends: ".method"
+            get: _.identity
+
+      model = new Model
+      expect(model.get "prop").is.equal model.property
+      expect(model.get "func").is.a("function").that.is.equal model.method

@@ -84,6 +84,7 @@ describe "computed config", ->
       # set entire config locally to do not depend from plugin defaults in test
       _.extend config,
         funcDepsPrefix: "="
+        propDepsPrefix: "."
         stringDepsSplitter: /\s+/,
         proxyFieldPattern: /^&$/
         shortDepsNameSeparator: /\s+<\s+/,
@@ -96,11 +97,12 @@ describe "computed config", ->
 
       before ->
         Model = clazzMixInit
+          theProperty: ""
           theMethod: ->
           computed:
             answer:
               get: -> 42
-              depends: ["answer", "someAnotherAttr", "=theMethod", externalFunc]
+              depends: ["answer", "someAnotherAttr", "=theMethod", ".theProperty", externalFunc]
 
         field = Model::computed.answer
 
@@ -109,21 +111,21 @@ describe "computed config", ->
         expect(field.depends).is.an "object", "Dependencies are not parsed"
 
       it "should properly parse different types of dependencies", ->
-        expect(Object.keys(field.depends)).have.members ["common", "attrs", "proxyIndex"]
+        expect(Object.keys(field.depends)).include.members ["common", "attrs", "proxyIndex"]
 
         expect(field.depends.attrs).is.an("array").and.have.members(["someAnotherAttr"], "Attribute dependency is not parsed properly")
 
         expect(field.depends.common)
           .is.an("array")
-          .and.include.members([Model::theMethod, externalFunc], "Functional dependencies are not parsed properly")
+          .and.have.members(["someAnotherAttr", ".theProperty", "=theMethod", externalFunc], "Functional dependencies are not parsed properly")
 
         expect(field.depends.proxyIndex).is.equal 0, "Proxy field is not parsed properly"
 
       if Object.freeze?
         it "should deeply freeze config after parsing", ->
           "use strict"
-          expect(-> Model::computed.newProp = 42).to.throw "Can't add property", "Config is not freezed"
-          expect(-> Model::computed.answer.depends.attrs.push(0)).to.throw /sealed/, "Config is not freezed deeply"
+          expect(-> Model::computed.newProp = 42).to.throw "Can't add property", "Config is not frozen"
+          expect(-> Model::computed.answer.depends.attrs.push(0)).to.throw /sealed/, "Config is not frozen deeply"
 
 
     describe "advanced syntax", ->
