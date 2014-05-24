@@ -2,8 +2,6 @@ Model = null
 
 describe "computed config", ->
 
-  after -> Model = null
-
   it "for each field should require at least getter or setter", ->
     init = -> clazzMixInit computed: useless: {}
     expect(init).to.throw /useless/
@@ -120,6 +118,12 @@ describe "computed config", ->
           .and.include.members([Model::theMethod, externalFunc], "Functional dependencies are not parsed properly")
 
         expect(field.depends.proxyIndex).is.equal 0, "Proxy field is not parsed properly"
+
+      if Object.freeze?
+        it "should deeply freeze config after parsing", ->
+          "use strict"
+          expect(-> Model::computed.newProp = 42).to.throw "Can't add property", "Config is not freezed"
+          expect(-> Model::computed.answer.depends.attrs.push(0)).to.throw /sealed/, "Config is not freezed deeply"
 
 
     describe "advanced syntax", ->

@@ -1,7 +1,7 @@
 // TODO: configurable serializeability for computed
 // TODO: built-in computed? (like full name)
 // TODO: allow to manually refresh depsMap, for cases when config was updatedin runtime
-
+"use strict";
 
 var ComputedFields = {};
 
@@ -164,6 +164,9 @@ var methods = {
         }
 
         utils.ensureValidDependencies(config);
+
+        utils.freeze(config, true);
+        utils.freeze(dependenciesMap, true);
 
         storage[cfg('configPropName')] = config;
         storage[depsMapPropName] = dependenciesMap;
@@ -596,14 +599,35 @@ var utils = {
         } else {
             return JSON.stringify(obj);
         }
+    },
+
+    // Deep freeze snippet taken from MDN
+    freeze: function(o, deep) {
+        if (!Object.freeze) {
+            return;
+        }
+        Object.freeze(o); // First freeze the object.
+        if (!deep) {
+            return;
+        }
+        var prop, propKey;
+        for (propKey in o) {
+            prop = o[propKey];
+            if (!o.hasOwnProperty(propKey) || !(typeof prop === "object") || Object.isFrozen(prop)) {
+                // If the object is on the prototype, not an object, or is already frozen,
+                // skip it. Note that this might leave an unfrozen reference somewhere in the
+                // object if there is an already frozen object containing an unfrozen object.
+                continue;
+            }
+
+            utils.freeze(prop, deep); // Recursively call deepFreeze.
+        }
     }
 };
 
 // -------------------------------
 
-if (Object.freeze) {
-    Object.freeze(sandboxContext);
-}
+utils.freeze(sandboxContext);
 if (Object.seal) {
     Object.seal(ComputedFields);
 }
