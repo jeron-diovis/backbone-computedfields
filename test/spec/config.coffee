@@ -19,12 +19,7 @@ describe "computed config", ->
       model = new Model
       expect(model.get "answer").is.equal 42
 
-    it "should override function with parsed config object", ->
-      new Model
-      expect(Model::computed).is.an "object", "Computed config function was not overridden with parsed config"
-
-
-  describe "should statically detect circular dependencies", configurable ->
+  describe "static detecting of circular dependencies", configurable ->
 
     initializer = -> mixin Model::, yes
 
@@ -90,6 +85,18 @@ describe "computed config", ->
         shortDepsNameSeparator: /\s+<\s+/,
         shortDepsSplitter: /\s+/,
 
+    cfgProp = "__computedFieldsParsedConfig"
+    getParsedCfg = (clazz) -> clazz::[cfgProp]
+
+    describe "validation", ->
+      it "should allow only strings and functions as dependencies", ->
+        Model = clazzMix
+          computed:
+            field:
+              get: ->
+              depends: ["attr", (->), {}, []]
+        expect(-> new Model).to.throw /either function or string/
+
     describe "basics", ->
 
       field = null
@@ -104,14 +111,14 @@ describe "computed config", ->
               get: -> 42
               depends: ["answer", "someAnotherAttr", "=theMethod", ".theProperty", externalFunc]
 
-        field = Model::computed.answer
+        field = getParsedCfg(Model).answer
 
       it "should modify computed config with parsed data", ->
         expect(field).has.property "name", "answer", "Field name is not parsed"
         expect(field.depends).is.an "object", "Dependencies are not parsed"
 
       it "should properly parse different types of dependencies", ->
-        expect(Object.keys(field.depends)).include.members ["common", "attrs", "proxyIndex"]
+        expect(field.depends).to.contain.keys ["common", "attrs", "proxyIndex"]
 
         expect(field.depends.attrs).is.an("array").and.have.members(["someAnotherAttr"], "Attribute dependency is not parsed properly")
 
@@ -124,8 +131,8 @@ describe "computed config", ->
       if Object.freeze?
         it "should deeply freeze config after parsing", ->
           "use strict"
-          expect(-> Model::computed.newProp = 42).to.throw "Can't add property", "Config is not frozen"
-          expect(-> Model::computed.answer.depends.attrs.push(0)).to.throw /sealed/, "Config is not frozen deeply"
+          expect(-> getParsedCfg(Model).newProp = 42).to.throw "Can't add property", "Config is not frozen"
+          expect(-> getParsedCfg(Model).answer.depends.attrs.push(0)).to.throw /sealed/, "Config is not frozen deeply"
 
 
     describe "advanced syntax", ->
@@ -141,7 +148,7 @@ describe "computed config", ->
 
         Model = clazzMixInit computed: field
 
-        deps = -> Model::computed[name].depends
+        deps = -> getParsedCfg(Model)[name].depends
 
 
       it "should allow to define dependencies as a string", ->

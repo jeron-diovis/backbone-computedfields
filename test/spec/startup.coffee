@@ -24,7 +24,7 @@ describe "startup", ->
 
   describe "plugin initialization", ->
 
-    propName = "_computedFieldsDependenciesMap"
+    propName = "__computedFieldsDependenciesMap"
 
     describe "when initializing with non-empty computed config", ->
       beforeEach ->

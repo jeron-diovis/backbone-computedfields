@@ -21,8 +21,13 @@ ComputedFields.config = {
 // shortcut
 var cfg = function(opt) { return ComputedFields.config[opt]; };
 
+// safe context for field accessors
 var sandboxContext = { isSandboxContext: true };
-var depsMapPropName = '_computedFieldsDependenciesMap';
+
+// service properties to be attached to model
+var parsedConfigPropName = '__computedFieldsParsedConfig';
+var depsMapPropName = '__computedFieldsDependenciesMap';
+
 var endlessLoopMaxIterations = 50;
 
 // ---------------------------------------------------
@@ -112,7 +117,7 @@ var wrappers = {
 
         this._previousAttributes = prev;
 
-        // now need to remove virtuals from 'attributes' hash. Do not use 'this.unset' for perfomance
+        // now need to remove virtuals from 'attributes' hash. Do not use 'this.unset' for performance
         for (var i = 0; i < attrs.virtual.length; i++) {
             delete this.attributes[attrs.virtual[i]];
         }
@@ -133,28 +138,32 @@ var wrappers = {
 var methods = {
 
     initialize: function () {
-        var model = this;
+        var model = this,
+            storage = utils.getSpecialPropsStorage(model);
 
-        if (utils.isDepsMapInitialized(model)) {
+        // whether is already initialized
+        if (_.has(storage, parsedConfigPropName)) {
             return model;
         }
 
-        var config = utils.getComputedConfig(model),
-            storage = utils.getDepsMapStorage(model);
+        var config = utils.getComputedConfig(model, true);
+
+        // as config will be parsed and modified, need to clone it to leave source unchanged
+        if (typeof model[cfg('configPropName')] === 'object') {
+            config = utils.deepClone(config);
+        }
 
         var dependenciesMap = {};
 
         for (var attr in config) {
             var field = config[attr];
+            field.name = attr;
 
-            if (!(_.has(field, 'get') || _.has(field, 'set'))) {
-                throw new Error('Computed fields: field "' + attr + '" is useless - no getter and no setter defined');
-            }
+            utils.ensureValidField(field);
 
             // TODO: short syntax for dependencies ("attr < dep1 dep2")
             // TODO: short syntax for getter (when getter only)
 
-            field.name = attr;
             field.depends = methods.parseDeps.call(model, field);
 
             var deps = field.depends.attrs;
@@ -169,7 +178,7 @@ var methods = {
         utils.freeze(config, true);
         utils.freeze(dependenciesMap, true);
 
-        storage[cfg('configPropName')] = config;
+        storage[parsedConfigPropName] = config;
         storage[depsMapPropName] = dependenciesMap;
 
         return model;
@@ -389,13 +398,13 @@ var methods = {
 // Should not be used with changing context
 var utils = {
 
-    getComputedConfig: function (model) {
-        return _.result(model, cfg('configPropName')) || {};
+    getComputedConfig: function (model, raw) {
+        return raw ? _.result(model, cfg('configPropName')) : model[parsedConfigPropName];
     },
 
 
-    hasComputed: function (model, config) {
-        return !_.isEmpty(config || utils.getComputedConfig(model));
+    hasComputed: function (model) {
+        return parsedConfigPropName in model || !_.isEmpty(utils.getComputedConfig(model, true));
     },
 
     isComputed: function (model, attr, config) {
@@ -421,12 +430,16 @@ var utils = {
     },
 
 
-    getDepsMapStorage: function (model) {
+    getSpecialPropsStorage: function (model) {
         return _.has(model, cfg('configPropName')) ? model : model.constructor.prototype;
     },
 
-    isDepsMapInitialized: function (model) {
-        return _.has(utils.getDepsMapStorage(model), depsMapPropName);
+
+    ensureValidField: function (field) {
+        if (!(_.has(field, 'get') || _.has(field, 'set'))) {
+            throw new Error('Computed fields: field "' + field.name + '" is useless - no getter and no setter defined');
+        }
+        return true;
     },
 
 
@@ -632,7 +645,7 @@ var utils = {
         var prop, propKey;
         for (propKey in o) {
             prop = o[propKey];
-            if (!o.hasOwnProperty(propKey) || !(typeof prop === "object") || Object.isFrozen(prop)) {
+            if (!o.hasOwnProperty(propKey) || !(typeof prop === "object") || (prop == null) || Object.isFrozen(prop)) {
                 // If the object is on the prototype, not an object, or is already frozen,
                 // skip it. Note that this might leave an unfrozen reference somewhere in the
                 // object if there is an already frozen object containing an unfrozen object.
@@ -641,6 +654,21 @@ var utils = {
 
             utils.freeze(prop, deep); // Recursively call deepFreeze.
         }
+    },
+
+    deepClone: function (obj) {
+        var clone = typeof obj === 'function'? obj: {};
+        for (var prop in obj) if (_.has(obj, prop)) {
+            var val = obj[prop];
+            if (_.isArray(val)) {
+                clone[prop] = val.slice();
+            } else if (_.isObject(val)) {
+                clone[prop] = utils.deepClone(val);
+            } else {
+                clone[prop] = val;
+            }
+        }
+        return clone;
     }
 };
 
